@@ -1,0 +1,7 @@
+local main = require("play")
+local t = main(7)
+if skin_config then
+	return t.skin
+else
+	return t.header
+end
