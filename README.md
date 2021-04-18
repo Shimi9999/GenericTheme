@@ -5,7 +5,7 @@ A play skin(7K/5K) for beatoraja made by lua.
 [Here](https://github.com/Shimi9999/GenericTheme/archive/refs/heads/master.zip)
 
 ## Support
-beatoraja 0.8.2 and later varsions
+beatoraja 0.8.2 and later versions
 
 ## License
 lua codes: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)  
