@@ -717,7 +717,7 @@ local function main(keysNumber)
 	do
 		local offset_x, num_space = 0, 0
 		local between_space = 10
-		local path = skin_config.get_path("parts/judge/" .. string.match(skin_config.file_path["judge"], "(.+)%.png$") .. ".lua")
+		local path = string.match(skin_config.get_path("customize/judge/" .. skin_config.file_path["Judge"]), "(.+)%.png$") .. ".lua"
 		local exist, setting = pcall(dofile, path)
 		if exist and setting then
 			if setting.offset_x then offset_x = setting.offset_x end
@@ -2542,7 +2542,7 @@ local function main(keysNumber)
 		local divx = 4 local divy = 4
 
 		-- get bomb settings from <bomb_image_filename>.lua
-		local path = skin_config.get_path("parts/bomb/" .. string.match(skin_config.file_path["bomb"], "(.+)%.png$") .. ".lua")
+		local path = string.match(skin_config.get_path("customize/bomb/" .. skin_config.file_path["Bomb"]), "(.+)%.png$") .. ".lua"
 		local exist, setting = pcall(dofile, path)
 		if exist and setting then
 			if setting.w then w = setting.w end
