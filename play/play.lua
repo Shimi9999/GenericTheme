@@ -1910,21 +1910,35 @@ local function main(keysNumber)
 		local h = geo.lane.h / 2 + offset.keybeam.h
 		local a = 255 + offset.keybeam.a
 		-- push
-		-- TODO 皿はゆっくり伸びるアニメーションにする？
-		for i = 1, keysNumber + 1 do
+		do
+			for i = 1, keysNumber do
+				table.insert(skin.destination, {
+					id = "keybeam_"..kind[i], offset = 3, timer = timer[i], brend = 1, dst = {
+						{x = geo.lane.each_x[i], y = geo.lane.y, w = geo.lane.each_w[i], h = h, a = a}
+					}
+				})
+			end
+			-- スクラッチのキービームのみ伸びるアニメーションをする(オートプレイではオフ)
+			local scratch_ontime = 40
 			table.insert(skin.destination, {
-				id = "keybeam_"..kind[i], offset = 3, timer = timer[i], brend = 1, dst = {
-					{x = geo.lane.each_x[i], y = geo.lane.y, w = geo.lane.each_w[i], h = h, a = a}
+				id = "keybeam_s", offset = 3, timer = timer[keysNumber + 1], op = {32}, brend = 1, loop = scratch_ontime, dst = {
+					{time = 0, x = geo.lane.each_x[keysNumber + 1], y = geo.lane.y, w = geo.lane.each_w[keysNumber + 1], h = 0, a = a},
+					{time = scratch_ontime, h = h}
+				}
+			})
+			table.insert(skin.destination, {
+				id = "keybeam_s", offset = 3, timer = timer[keysNumber + 1], op = {33}, brend = 1, dst = {
+					{x = geo.lane.each_x[keysNumber + 1], y = geo.lane.y, w = geo.lane.each_w[keysNumber + 1], h = h, a = a}
 				}
 			})
 		end
-		local keyofftime = 100
 		-- away
+		local key_offtime = 100
 		for i = 1, keysNumber + 1 do
 			table.insert(skin.destination, {
-				id = "keybeam_"..kind[i], offset = 3, timer = timer[i] + 20, brend = 1, loop = keyofftime, acc = 2, dst = {
+				id = "keybeam_"..kind[i], offset = 3, timer = timer[i] + 20, brend = 1, loop = key_offtime, acc = 2, dst = {
 					{time = 0, x = geo.lane.each_x[i], y = geo.lane.y, w = geo.lane.each_w[i], h = h, a = a},
-					{time = keyofftime, x = geo.lane.each_x[i] + geo.lane.each_w[i] / 2, w = 0, a = 0}
+					{time = key_offtime, x = geo.lane.each_x[i] + geo.lane.each_w[i] / 2, w = 0, a = 0}
 				}
 			})
 		end
