@@ -2564,13 +2564,13 @@ local function main(keysNumber)
 			if setting.divx then divx = setting.divx end
 			if setting.divy then divy = setting.divy end
 		end
-		local is16x4 = divx == 16 and divy == 4 and w and h
+		local isFastSlowBomb = divx == 16 and divy >= 3 and w and h
 
 		local function bombTimer(i) return 50 + i % (keysNumber + 1) end
 		local function lnBombTimer(i) return 70 + i % (keysNumber + 1) end
 
 		local normal_cycle = 250 local ln_cycle = 160
-		if is16x4 then
+		if isFastSlowBomb then
 			local function lnpos_y(i)
 				if i == keysNumber + 1 then
 					return h * 3
@@ -2583,7 +2583,8 @@ local function main(keysNumber)
 			for i = 1, keysNumber + 1 do
 				append_all(skin.image, {
 					{id = "bomb_"..i, src = "src_bomb", x = 0, y = 0, w = -1, h = h, divx = 16, timer = bombTimer(i), cycle = normal_cycle},
-					{id = "lnbomb_"..i, src = "src_bomb", x = 0, y = lnpos_y(i), w = w * 8, h = h, divx = 8, timer = lnBombTimer(i), cycle = ln_cycle},
+					--{id = "lnbomb_"..i, src = "src_bomb", x = 0, y = lnpos_y(i), w = w * 8, h = h, divx = 8, timer = lnBombTimer(i), cycle = ln_cycle},
+					{id = "lnbomb_"..i, src = "src_bomb", x = 0, y = 0, w = w * 8, h = h, divx = 8, timer = lnBombTimer(i), cycle = ln_cycle},
 					{id = "slowbomb_"..i, src = "src_bomb", x = 0, y = h, w = -1, h = h, divx = 16, timer = bombTimer(i), cycle = normal_cycle},
 					{id = "fastbomb_"..i, src = "src_bomb", x = 0, y = h * 2, w = -1, h = h, divx = 16, timer = bombTimer(i), cycle = normal_cycle}
 				})
@@ -2626,7 +2627,7 @@ local function main(keysNumber)
 		local y = geo.lane.y - size_h / 2 + 10 / 2 -- judgelineのh / 2を足す
 		for i = 1, keysNumber + 1 do
 			local x = geo.lane.each_x[i] + geo.lane.each_w[i] / 2 - size_w / 2
-			if is16x4 then
+			if isFastSlowBomb then
 				append_all(skin.destination, {
 					{id = "bomb_"..i, offset = 3, loop = -1, filter = 1, timer = bombTimer(i), op = {-1242, -1243}, blend = 2, dst = {
 						{time = 0, x = x, y = y, w = size_w, h = size_h},
