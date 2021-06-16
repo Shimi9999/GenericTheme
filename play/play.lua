@@ -480,6 +480,7 @@ local function main(keysNumber)
 		{id = "src_scoregraph_text", path = "parts/scoregraph_text.png"},
 		{id = "src_fastslow", path = "parts/fast_slow.png"},
 		{id = "src_ready_finish", path = "parts/ready_finish.png"},
+		{id = "src_stagefile_default", path = "parts/stagefile_default.png"},
 	}
 	if keysNumber == 5 then
 		table.insert(skin.source, {id = "src_5keyscover", path = "customize/5keyscover/*.png"})
@@ -2169,6 +2170,9 @@ local function main(keysNumber)
 	end
 	-- loading progress & stagefile
 	do
+		table.insert(skin.image,
+			{id = "stagefile_default", src = "src_stagefile_default", x = 0, y = 0, w = -1, h = -1}
+		)
 		table.insert(skin.value,
 			number({id = "loading_progress_number", src = "src_number_kenney_future", divx = 10, digit = 3, ref = 165})
 		)
@@ -2187,7 +2191,10 @@ local function main(keysNumber)
 			{id = -110, op = {80}, dst = {
 				{x = stagefile_x, y = stagefile_y, w = stagefile_w, h = stagefile_h},
 			}},
-			{id = -100, op = {80}, stretch = 1, dst = {
+			{id = -100, op = {80, 191}, stretch = 1, dst = {
+				{x = stagefile_x, y = stagefile_y, w = stagefile_w, h = stagefile_h},
+			}},
+			{id = "stagefile_default", op = {80, 190}, stretch = 1, dst = {
 				{x = stagefile_x, y = stagefile_y, w = stagefile_w, h = stagefile_h},
 			}},
 			-- loading progress
