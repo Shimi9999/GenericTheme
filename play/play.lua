@@ -62,6 +62,13 @@ local property = {
 			far = {name = "Far", op = 911},
 		}
 	},
+	scoreGraphLowerArea = {
+		name = "Score Graph Lower Area",
+		item = {
+			playinfo = {name = "Play Info", op = 970},
+			graphinfo = {name = "Graph Info", op = 971},
+		}
+	},
 	judgeDetail = {
 		name = "Judge Detail",
 		item = {
@@ -164,6 +171,7 @@ local property_order = {
 	"stratchSide",
 	"scoreGraph",
 	"scoreGraphPosition",
+	"scoreGraphLowerArea",
 	"judgeDetail",
 	"judgeDetailPosition",
 	"ghostScore",
@@ -478,6 +486,7 @@ local function main(keysNumber)
 		{id = "src_stagetext", path = "parts/stagetext.png"},
 		{id = "src_othertexts", path = "parts/othertexts.png"},
 		{id = "src_scoregraph_text", path = "parts/scoregraph_text.png"},
+		{id = "src_scoregraph_info", path = "parts/scoregraph_info.png"},
 		{id = "src_fastslow", path = "parts/fast_slow.png"},
 		{id = "src_ready_finish", path = "parts/ready_finish.png"},
 		{id = "src_stagefile_default", path = "parts/stagefile_default.png"},
@@ -1783,7 +1792,73 @@ local function main(keysNumber)
 		end
 
 		-- playinfo
-		append_all(skin.destination, playinfo_dst(geo.scoregraph.x, 12, geo.scoregraph.w, 255 + offset.scoregraph.a, isScoreGraphSlim(), {}))
+		if property.scoreGraphLowerArea.item.playinfo.isSelected() then
+			append_all(skin.destination, playinfo_dst(geo.scoregraph.x, 12, geo.scoregraph.w, 255 + offset.scoregraph.a, isScoreGraphSlim(), {}))
+		end
+
+		-- graphinfo
+		if property.scoreGraphLowerArea.item.graphinfo.isSelected() then
+			local text_img_h = 70 local text_img_w = 368
+			append_all(skin.image, {
+				{id = "graphinfo_text_score", src = "src_scoregraph_info", x = 0, y = 0, w = text_img_w, h = text_img_h},
+				{id = "graphinfo_text_mybest", src = "src_scoregraph_info", x = 0, y = text_img_h, w = text_img_w, h = text_img_h},
+				--{id = "graphinfo_text_target", src = "src_scoregraph_info", x = 0, y = text_img_h * 2, w = text_img_w, h = text_img_h},
+				{id = "graphinfo_text_ranks", src = "src_scoregraph_info", x = 0, y = text_img_h * 3, w = text_img_w, h = text_img_h * 11, divy = 11, len = 11, ref = 77},
+			})
+
+			-- background
+			local base_y = 12
+			table.insert(skin.destination,
+				{id = -110, dst = {
+					{x = geo.scoregraph.x, y = base_y, w = geo.scoregraph.w, h = geo.scoregraph.y - base_y - 6, a = 255 + offset.scoregraph.a}
+				}}
+			)
+
+			local dark = function(t)
+				local rate = 0.4
+				t.r = t.r * rate
+				t.g = t.g * rate
+				t.b = t.b * rate
+				return t
+			end
+			local now_color = dark({r = 50, g = 50, b = 200})
+			local best_color = dark({r = 50, g = 200, b = 50})
+			local target_color = dark({r = 200, g = 50, b = 50})
+			local text_color = {r = 240, g = 240, b = 240}
+
+			local label_h = 30 local mergin_y = 5
+			local total_h = label_h * 3 + mergin_y * 2
+			local y = geo.scoregraph.y - 10 - total_h
+			local label_x = geo.scoregraph.x + 4
+			local label_w = geo.scoregraph.w - 4 * 2
+			append_all(skin.destination, {
+				{id = -111, dst = {
+					merge_all({x = label_x, y = y, w = label_w, h = label_h}, target_color)
+				}},
+				{id = -111, dst = {
+					merge_all({x = label_x, y = y + label_h + mergin_y, w = label_w, h = label_h}, best_color)
+				}},
+				{id = -111, dst = {
+					merge_all({x = label_x, y = y + (label_h + mergin_y) * 2, w = label_w, h = label_h}, now_color)
+				}},
+			})
+
+			local text_h = 21
+			local text_w = text_h / text_img_h * text_img_w
+			local text_x = label_x + (label_w - text_w) / 2
+			local text_y = y + (label_h - text_h) / 2
+			append_all(skin.destination, {
+				{id = "graphinfo_text_ranks", filter = 1, dst = {
+					merge_all({x = text_x, y = text_y, w = text_w, h = text_h}, text_color)
+				}},
+				{id = "graphinfo_text_mybest", filter = 1, dst = {
+					merge_all({x = text_x, y = text_y + label_h + mergin_y, w = text_w, h = text_h}, text_color)
+				}},
+				{id = "graphinfo_text_score", filter = 1, dst = {
+					merge_all({x = text_x, y = text_y + (label_h + mergin_y) * 2, w = text_w, h = text_h}, text_color)
+				}},
+			})
+		end
 	end
 
 	-- lane
