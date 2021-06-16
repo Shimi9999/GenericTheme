@@ -2627,7 +2627,7 @@ local function main(keysNumber)
 			x = geo.lane.x + geo.lane.w
 		end
 		table.insert(skin.destination,
-			{id = "gaugetotal", dst = {
+			{id = "gaugetotal", filter = 1, dst = {
 				{x = x, y = 196, w = w, h = h, r = 100, g = 100, b = 100},
 			}}
 		)
