@@ -2259,6 +2259,11 @@ local function main(keysNumber)
 		local graph_h = 24 local number_w = 22 local number_h = 20
 		local space_h = 4
 		local stagefile_w = geo.lane.w * 0.75 local stagefile_h = stagefile_w * 3 / 4
+		-- set max size
+		if stagefile_h > header.h / 3 then
+			stagefile_h = header.h / 3
+			stagefile_w = stagefile_h * 4 / 3
+		end
 		local stagefile_x = geo.lane.center_x - stagefile_w / 2 local stagefile_y = y + graph_h + space_h
 		local frame_w = 5 local frame_h = 5
 		local dst = {
