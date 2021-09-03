@@ -352,6 +352,10 @@ local function main(keysNumber)
 	geo.lane.x = geo.lanearea.x + geo.lanearea.padding_left
 	geo.lane.center_x = geo.lane.x + geo.lane.w / 2
 	geo.lane.fivekeycover_w = geo.note.white_w + geo.note.black_w + geo.lane.separateline_w * 2
+	geo.lane.fivekey_center_x = geo.lane.center_x - geo.lane.fivekeycover_w / 2
+	if isRightScratch() then
+		geo.lane.fivekey_center_x = geo.lane.center_x + geo.lane.fivekeycover_w / 2
+	end
 
 	geo.lane.order = {8, 1, 2, 3, 4, 5, 6, 7}
 	if keysNumber == 5 then
@@ -2135,15 +2139,19 @@ local function main(keysNumber)
 
 			local x, y
 			if position.typeA.isSelected() then
+				local lane_center_x = geo.lane.center_x
+				if keysNumber == 5 then
+					lane_center_x = geo.lane.fivekey_center_x
+				end
 				if anotherIsOnAndTypeA then
 					local between_space = 15
 					if isJudgeDetail then
-						x = geo.lane.center_x + between_space
+						x = lane_center_x + between_space
 					else
-						x = geo.lane.center_x - (total_w + between_space)
+						x = lane_center_x - (total_w + between_space)
 					end
 				else
-					x = geo.lane.center_x - total_w / 2
+					x = lane_center_x - total_w / 2
 				end
 				y = judge_y + judge_h
 			else
