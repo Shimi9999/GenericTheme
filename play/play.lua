@@ -356,6 +356,7 @@ local function main(keysNumber)
 	if isRightScratch() then
 		geo.lane.fivekey_center_x = geo.lane.center_x + geo.lane.fivekeycover_w / 2
 	end
+	geo.lane.judgeline_h = 10
 
 	geo.lane.order = {8, 1, 2, 3, 4, 5, 6, 7}
 	if keysNumber == 5 then
@@ -1968,7 +1969,7 @@ local function main(keysNumber)
 	end
 	-- judgeline
 	table.insert(skin.destination, {id = -111, offset = 3, dst = {
-		{x = geo.lane.x, y = geo.lane.y, w = geo.lane.w, h = 10, r = 255, g = 0, b = 0},
+		{x = geo.lane.x, y = geo.lane.y, w = geo.lane.w, h = geo.lane.judgeline_h, r = 255, g = 0, b = 0},
 	}})
 	-- keybeam
 	do
@@ -2719,7 +2720,7 @@ local function main(keysNumber)
 				size_w = w * size_h / h
 			end
 		end
-		local y = geo.lane.y - size_h / 2 + 10 / 2 -- judgelineのh / 2を足す
+		local y = geo.lane.y - size_h / 2 + geo.lane.judgeline_h / 2
 		for i = 1, keysNumber + 1 do
 			local x = geo.lane.each_x[i] + geo.lane.each_w[i] / 2 - size_w / 2
 			if isFastSlowBomb then
