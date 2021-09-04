@@ -448,7 +448,7 @@ local function main(keysNumber)
 	geo.bga.center_x = geo.bga.x + geo.bga.w / 2
 	geo.bga.center_y = geo.bga.y + geo.bga.h / 2
 
-  skin.source = {
+	skin.source = {
 		{id = "src_background", path = "customize/background/*.png"},
 		{id = "src_failed", path = "customize/failed/*.png"},
 		{id = "src_notes", path = "customize/notes/*.png"},
@@ -499,12 +499,12 @@ local function main(keysNumber)
 		table.insert(skin.source, {id = "src_5keyscover", path = "customize/5keyscover/*.png"})
 	end
 
-  skin.font = {
+	skin.font = {
 		{id = "genshin_bold", path = "../common/font/GenShinGothic-Bold.ttf"},
 		{id = "newtown", path = "../common/font/Newtown-8e6M.ttf"},
-  }
+	}
 
-  skin.image = {
+	skin.image = {
 		{id = "text_image_dot", src = "src_othertexts", x = 0, y = 0, w = 70, h = 70},
 		{id = "text_image_%", src = "src_othertexts", x = 0, y = 70 * 2, w = 80, h = 70},
 	}
@@ -544,7 +544,7 @@ local function main(keysNumber)
 	skin.timingvisualizer = {}
 
 	do
-		local white_x = 216	local black_x = 276	local scratch_x = 108
+		local white_x = 216 local black_x = 276 local scratch_x = 108
 		local note_y = 0
 		local lne_y = 36 local lns_y = 72 local lnb_y = 108 local lna_y = 144
 		local hcne_y = 216 local hcns_y = 252 local hcnb_y = 288 local hcna_y = 306 local hcnr_y = 306 local hcnd_y = 342
@@ -776,7 +776,7 @@ local function main(keysNumber)
 		end
 		local n_x = f_w + between_space - num_space * 4.5 -- why 4.5?
 		local n_y = 0
-    local looptime = 500
+		local looptime = 500
 		skin.judge = {
 			{
 				id = "judge",
@@ -842,8 +842,8 @@ local function main(keysNumber)
 
 	local function frame_dst(x, y, w, h, a, thickness_w, thickness_h, dst_additional_params)
 		x = math.floor(x) y = math.floor(y) -- 小数による座標ズレ防止
-		w = math.floor(w)	h = math.floor(h)
-		thickness_w = math.floor(thickness_w)	thickness_h = math.floor(thickness_h)
+		w = math.floor(w) h = math.floor(h)
+		thickness_w = math.floor(thickness_w) thickness_h = math.floor(thickness_h)
 		local frame_id = "_"..x..y..w..h..thickness_w..thickness_h
 		local src = "src_frame_bga"
 		local img_w = 1182 local img_h = 880
@@ -2632,7 +2632,7 @@ local function main(keysNumber)
 				local base_total = math.max(260.0, 7.605 * totalnotes / (0.01 * totalnotes + 6.5))
 				local total_percentage = total / base_total * 100
 				total_percentage = math.ceil(total_percentage * 100) / 100 -- string.format("%.2f", total_percentage) が機能しない代わり
-				return total .. " (" .. total_percentage .. "%)"  end},
+				return total .. " (" .. total_percentage .. "%)" end},
 		})
 		local w = 11 local h = 16
 		local x = geo.lane.x
