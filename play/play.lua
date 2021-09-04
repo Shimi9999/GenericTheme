@@ -1383,8 +1383,8 @@ local function main(keysNumber)
 			end
 			local y = header_y + 25
 			local stage_id = "stage_beatoraja"
-			-- grade stage (beatoraja未対応)
-			--[[if main_state.option(293) then
+			-- course stages
+			if main_state.option(290) then
 				if main_state.option(280) then
 					stage_id = "stage_1st"
 				elseif main_state.option(281) then
@@ -1396,7 +1396,7 @@ local function main(keysNumber)
 				else
 					stage_id = "stage_extra"
 				end
-			end]]
+			end
 			table.insert(skin.destination,
 				{id = stage_id, filter = 1, dst = {
 					{time = 0, x = x, y = y, w = w, h = h},
