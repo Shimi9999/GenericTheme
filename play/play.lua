@@ -1137,25 +1137,6 @@ local function main(keysNumber)
 				
 				-- フレームの内側の黒いボーダー
 				append_all(skin.destination, border_dst(real_bga_x, real_bga_y, real_bga_w, real_bga_h, {r = 0, g = 0, b = 0}, bga_a, 3, 3))
-				--[[local blackframe_thin = 3
-				append_all(skin.destination, {
-					-- upper
-					{id = -110, dst = {
-						{x = real_bga_x - blackframe_thin, y = real_bga_y + real_bga_h, w = real_bga_w + blackframe_thin * 2, h = blackframe_thin, a = bga_a}
-					}},
-					-- lower
-					{id = -110, dst = {
-						{x = real_bga_x - blackframe_thin, y = real_bga_y - blackframe_thin, w = real_bga_w + blackframe_thin * 2, h = blackframe_thin, a = bga_a}
-					}},
-					-- left
-					{id = -110, dst = {
-						{x = real_bga_x - blackframe_thin, y = real_bga_y, w = blackframe_thin, h = real_bga_h, a = bga_a}
-					}},
-					-- right
-					{id = -110, dst = {
-						{x = real_bga_x + real_bga_w, y = real_bga_y, w = blackframe_thin, h = real_bga_h, a = bga_a}
-					}},
-				})]]
 			end
 
 			local function bga_dst(x, y, w, h, stretch)
@@ -1177,7 +1158,7 @@ local function main(keysNumber)
 			if property.fullscreenBga.item.on.isSelected() then
 				append_all(skin.destination, bga_dst(0, 0, header.w, header.h, 3))
 			else
-				append_all(skin.destination, bga_dst(real_bga_x, real_bga_y, real_bga_w, real_bga_h, 0))
+				append_all(skin.destination, bga_dst(real_bga_x, real_bga_y, real_bga_w, real_bga_h, -1))
 			end
 		end
 
@@ -1949,12 +1930,6 @@ local function main(keysNumber)
 			}},
 		})
 	end
-	-- lane border white line レーン周りの白線
-	if property.hideFrames.item.off.isSelected() then
-		local w = 3
-		append_all(skin.destination, border_dst(geo.lane.x - w, geo.lane.y - w, geo.lane.w + w * 2, geo.lane.h + w * 2, {r = 0, g = 0, b = 0}, 255, 1, 1))
-		append_all(skin.destination, border_dst(geo.lane.x, geo.lane.y, geo.lane.w, geo.lane.h, {r = 200, g = 200, b = 200}, 255, w, w))
-	end
 	-- lane
 	do
 		local black = {r = 0, g = 0, b = 0}
@@ -1983,6 +1958,12 @@ local function main(keysNumber)
 		table.insert(skin.destination, {id = -110, offset = 3, dst = {
 			{x = geo.lane.x, y = geo.lane.y, w = geo.lane.w, h = geo.lane.h, a = offset.lane_darkness.a},
 		}})
+	end
+	-- lane border white line レーン周りの白線
+	if property.hideFrames.item.off.isSelected() then
+		local w = 3
+		append_all(skin.destination, border_dst(geo.lane.x - w, geo.lane.y - w, geo.lane.w + w * 2, geo.lane.h + w * 2, {r = 0, g = 0, b = 0}, 255, 1, 1))
+		append_all(skin.destination, border_dst(geo.lane.x, geo.lane.y, geo.lane.w, geo.lane.h, {r = 200, g = 200, b = 200}, 255, w, w))
 	end
 	-- glow
 	table.insert(skin.image,
