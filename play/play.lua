@@ -151,6 +151,13 @@ local property = {
 			horizontalClose = {name = "Horizontal Close", op = 962},
 		}
 	},
+	fullscreenBga = {
+		name = "Fullscreen BGA",
+		item = {
+			off = {name = "Off", op = 975},
+			on = {name = "On", op = 976},
+		}
+	},
 	hideFrames = { -- laneborderwhiteline,musicprogressbar,BGA,BPM,playinfoが対象 STAGEFILEは非対象
 		name = "Hide Frames",
 		item = {
@@ -182,6 +189,7 @@ local property_order = {
 	"timingVisualizer",
 	"lowerLaneArea",
 	"failedAnimation",
+	"fullscreenBga",
 	"hideFrames",
 	"total"
 }
@@ -255,19 +263,20 @@ local filepath = {
 }
 
 local offset_source = {
-	{key = "lane", name = "Lane offset(%)", id = 40, w = true},
+	{key = "lane_width", name = "Lane offset(%)", id = 40, w = true},
+	{key = "lane", name = "Lane offset", id = 55, x = true, a = true},
 	{key = "lane_darkness", name = "Lane darkness(0~255)", id = 41, a = true},
 	{key = "keybeam", name = "Keybeam offset", id = 42, h = true, a = true},
 	{key = "judge", name = "Judge size offset", id = 43, w = true},
 	{key = "bomb", name = "Bomb size offset", id = 44, w = true},
-	{key = "bga", name = "BGA offset", id = 45, x = true, y = true, w = true, h = true--[[, a = true]]},
+	{key = "bga", name = "BGA offset", id = 45, x = true, y = true, w = true, h = true, a = true},
 	{key = "bga_darkness", name = "BGA darkness(0~255)", id = 46, a = true},
-	{key = "bga_header", name = "BGA Header offset", id = 47, a = true},
+	{key = "bga_header", name = "BGA Header offset", id = 47, x = true, w = true, a = true},
 	{key = "bpm", name = "BPM offset", id = 48, x = true, y = true, a = true},
 	{key = "notesgraph", name = "NotesGraph offset", id = 49, x = true, y = true, w = true, h = true, a = true},
 	{key = "timingvisualizer", name = "Timing Visualizer offset", id = 50, x = true, y = true, w = true, h = true, a = true},
 	{key = "lowerlanearea_darkness", name = "LowerLaneArea darkness(0~255)", id = 51, a = true},
-	{key = "scoregraph", name = "ScoreGraph offset", id = 52, w = true, a = true},
+	{key = "scoregraph", name = "ScoreGraph offset", id = 52, x = true, w = true, a = true},
 	{key = "scoregraph_darkness", name = "ScoreGraph darkness(0~255)", id = 53, a = true},
 	{key = "playinfo", name = "PlayInfo offset", id = 54, x = true, y = true, --[[w = true,]] a = true}
 }
@@ -326,7 +335,7 @@ local function main(keysNumber)
 	geo.note.base_white_w = 60
 	geo.note.base_black_w = 48
 	geo.note.base_scratch_w = 108
-	geo.note.scale_w = 1 + offset.lane.w / 100
+	geo.note.scale_w = 1 + offset.lane_width.w / 100
 	geo.note.white_w = geo.note.base_white_w * geo.note.scale_w
 	geo.note.black_w = geo.note.base_black_w * geo.note.scale_w
 	geo.note.scratch_w = geo.note.base_scratch_w * geo.note.scale_w
@@ -349,6 +358,8 @@ local function main(keysNumber)
 	if is2P() then
 		geo.lanearea.x = header.w - geo.lanearea.w
 	end
+	geo.lanearea.base_x = geo.lanearea.x -- offset未適用のscoregrapharea,bgaareaの相対位置調整用座標
+	geo.lanearea.x = geo.lanearea.x + offset.lane.x
 	geo.lane.x = geo.lanearea.x + geo.lanearea.padding_left
 	geo.lane.center_x = geo.lane.x + geo.lane.w / 2
 	geo.lane.fivekeycover_w = geo.note.white_w + geo.note.black_w + geo.lane.separateline_w * 2
@@ -404,26 +415,26 @@ local function main(keysNumber)
 		geo.scoregrapharea.w = geo.scoregraph.w + scoregraph_margin_x * 2
 		if is1P() then
 			if isScoreGraphNear() then
-				geo.scoregrapharea.x = geo.lanearea.x + geo.lanearea.w
+				geo.scoregrapharea.x = geo.lanearea.base_x + geo.lanearea.w
 			else
 				geo.scoregrapharea.x = header.w - geo.scoregrapharea.w
 			end
 		else
 			if isScoreGraphNear() then
-				geo.scoregrapharea.x = geo.lanearea.x - geo.scoregrapharea.w
+				geo.scoregrapharea.x = geo.lanearea.base_x - geo.scoregrapharea.w
 			else
 				geo.scoregrapharea.x = 0
 			end
 		end
 
-		geo.scoregraph.x = geo.scoregrapharea.x + scoregraph_margin_x
+		geo.scoregraph.x = geo.scoregrapharea.x + scoregraph_margin_x + offset.scoregraph.x
 		geo.scoregraph.y = 220
 	end
 
 	-- bga and bgaarea geometry
 	geo.bgaarea = {}
 	if is1P() then
-		geo.bgaarea.x = geo.lanearea.x + geo.lanearea.w
+		geo.bgaarea.x = geo.lanearea.base_x + geo.lanearea.w
 		if isScoreGraph() and isScoreGraphNear() then
 			geo.bgaarea.x = geo.bgaarea.x + geo.scoregrapharea.w
 		end
@@ -896,6 +907,27 @@ local function main(keysNumber)
 		return dst
 	end
 
+	local function border_dst(x, y, w, h, color, a, thickness_w, thickness_h)
+		return {
+			-- upper
+			{id = -111, dst = {
+				merge_all({x = x - thickness_w, y = y + h, w = w + thickness_w * 2, h = thickness_h, a = a}, color)
+			}},
+			-- lower
+			{id = -111, dst = {
+				merge_all({x = x - thickness_w, y = y - thickness_h, w = w + thickness_w * 2, h = thickness_h, a = a}, color)
+			}},
+			-- left
+			{id = -111, dst = {
+				merge_all({x = x - thickness_w, y = y, w = thickness_w, h = h, a = a}, color)
+			}},
+			-- right
+			{id = -111, dst = {
+				merge_all({x = x + w, y = y, w = thickness_w, h = h, a = a}, color)
+			}},
+		}
+	end
+
 	geo.playinfo = {}
 	geo.playinfo.line_h = 22
 	geo.playinfo.separateline_h = 4
@@ -1096,51 +1128,57 @@ local function main(keysNumber)
 
 		-- bga
 		do
-			local dst = {}
+			local bga_a = 255 + offset.bga.a
 
 			-- frame
-			if property.hideFrames.item.off.isSelected() then
-				table.insert(skin.image,
-					{id = "frame_bga", src = "src_frame_bga", x = 0, y = 0, w = -1, h = -1}
-				)	
-				append_all(dst, {
-					{id = "frame_bga", dst = {
-						{x = real_bga_x - geo.bga.frame_w, y = real_bga_y - geo.bga.frame_h, w = real_bga_w + geo.bga.frame_w * 2, h = real_bga_h + geo.bga.frame_h * 2}
-					}},
+			if property.hideFrames.item.off.isSelected() and property.fullscreenBga.item.off.isSelected() then
+				append_all(skin.destination, frame_dst(real_bga_x - geo.bga.frame_w, real_bga_y - geo.bga.frame_h, real_bga_w + geo.bga.frame_w * 2, real_bga_h + geo.bga.frame_h * 2,
+					bga_a, geo.bga.frame_w, geo.bga.frame_h, {}))
+				
+				-- フレームの内側の黒いボーダー
+				append_all(skin.destination, border_dst(real_bga_x, real_bga_y, real_bga_w, real_bga_h, {r = 0, g = 0, b = 0}, bga_a, 3, 3))
+				--[[local blackframe_thin = 3
+				append_all(skin.destination, {
+					-- upper
 					{id = -110, dst = {
-						{x = real_bga_x - 3, y = real_bga_y - 3, w = real_bga_w + 3 * 2, h = real_bga_h + 3 * 2}
+						{x = real_bga_x - blackframe_thin, y = real_bga_y + real_bga_h, w = real_bga_w + blackframe_thin * 2, h = blackframe_thin, a = bga_a}
 					}},
-				})
+					-- lower
+					{id = -110, dst = {
+						{x = real_bga_x - blackframe_thin, y = real_bga_y - blackframe_thin, w = real_bga_w + blackframe_thin * 2, h = blackframe_thin, a = bga_a}
+					}},
+					-- left
+					{id = -110, dst = {
+						{x = real_bga_x - blackframe_thin, y = real_bga_y, w = blackframe_thin, h = real_bga_h, a = bga_a}
+					}},
+					-- right
+					{id = -110, dst = {
+						{x = real_bga_x + real_bga_w, y = real_bga_y, w = blackframe_thin, h = real_bga_h, a = bga_a}
+					}},
+				})]]
 			end
 
-			append_all(dst, {
-				-- background black
-				{id = -110, dst = {
-					{x = real_bga_x, y = real_bga_y, w = real_bga_w, h = real_bga_h}
-				}},
-				-- bga fullsize (not effective?)
-				--[[{id = "bga", op = {41}, stretch = 3, dst = {
-					{x = real_bga_x, y = real_bga_y, w = real_bga_w, h = real_bga_h, a = 100}
-				}},]]
-				-- bga
-				{id = "bga", op = {41}, dst = {
-					{x = real_bga_x, y = real_bga_y, w = real_bga_w, h = real_bga_h}
-				}},
-				-- bga darkness
-				{id = -110, op = {41}, dst = {
-					{x = real_bga_x, y = real_bga_y, w = real_bga_w, h = real_bga_h, a = offset.bga_darkness.a}
-				}}
-			})
-
-			-- BGA透過 TODO BGAのフレームや背景の黒が混ざって透過するので一旦無効化
-			--[[for i, v in ipairs(dst) do
-				if dst[i].dst[1].a == nil then
-					dst[i].dst[1].a = 255 + offset.bga.a
-				else
-					dst[i].dst[1].a = dst[i].dst[1].a + offset.bga.a
-				end
-			end]]
-			append_all(skin.destination, dst)
+			local function bga_dst(x, y, w, h, stretch)
+				return {
+					-- background black
+					{id = -110, draw = function() return offset.bga.a >= 0 end, dst = {
+						{x = x, y = y, w = w, h = h}
+					}},
+					-- bga
+					{id = "bga", op = {41}, stretch = stretch, dst = {
+						{x = x, y = y, w = w, h = h, a = bga_a}
+					}},
+					-- bga darkness
+					{id = -110, op = {41}, dst = {
+						{x = x, y = y, w = w, h = h, a = offset.bga_darkness.a}
+					}}
+				}
+			end
+			if property.fullscreenBga.item.on.isSelected() then
+				append_all(skin.destination, bga_dst(0, 0, header.w, header.h, 3))
+			else
+				append_all(skin.destination, bga_dst(real_bga_x, real_bga_y, real_bga_w, real_bga_h, 0))
+			end
 		end
 
 		-- genre,title,artist
@@ -1197,17 +1235,18 @@ local function main(keysNumber)
 		)
 		local bpm_center_x = geo.bga.center_x + offset.bpm.x
 		local bpm_y = 19 + offset.bpm.y local bpm_w = 420 local bpm_h = 64
+		local bpm_a = 255 + offset.bpm.a
 		local frame_w = 8 local frame_h = 8
 		append_all(skin.destination, {
 			-- background black
 			{id = -110, dst = {
-				{x = bpm_center_x - bpm_w / 2 - 4, y = bpm_y - 4, w = bpm_w + 8, h = bpm_h + 8, a = 200 + offset.bpm.a}
+				{x = bpm_center_x - bpm_w / 2 - 4, y = bpm_y - 4, w = bpm_w + 8, h = bpm_h + 8, a = bpm_a}
 			}},
 		})
 		if property.hideFrames.item.off.isSelected() then
 			append_all(skin.destination, {
 				{id = "frame_bpm", dst = {
-					{x = bpm_center_x - bpm_w / 2 - frame_w, y = bpm_y - frame_h, w = bpm_w + frame_w * 2, h = bpm_h + frame_h * 2, a = 245 + offset.bpm.a}
+					{x = bpm_center_x - bpm_w / 2 - frame_w, y = bpm_y - frame_h, w = bpm_w + frame_w * 2, h = bpm_h + frame_h * 2, a = bpm_a}
 				}},
 			})
 		end
@@ -1252,18 +1291,20 @@ local function main(keysNumber)
 			}},
 		})
 	end
-	-- header
+	-- bga header
 	do
+		local header_x = geo.bga.x - geo.bga.frame_w + offset.bga_header.x - offset.bga_header.w / 2
+		local header_w = geo.bga.w + geo.bga.frame_w * 2 + offset.bga_header.w
+		local header_center_x = header_x + header_w / 2
+		local header_y = geo.bga.y + geo.bga.h + geo.bga.frame_h
+		local header_h = header.h - header_y
+
 		-- background black
 		do
-			local x = geo.lanearea.x + geo.lanearea.w - geo.lanearea.padding_right
-			local w = header.w - x
-			if is2P() then
-				x = 0
-				w = geo.lanearea.x + geo.lanearea.padding_left
-			end
-			local y = geo.bga.y + geo.bga.h + geo.bga.frame_h
-			local h = header.h - (geo.bga.y + geo.bga.h + geo.bga.frame_h)
+			local w = geo.bgaarea.w + 20 -- 20でlaneとscoragraphまでの隙間を埋める
+			local x = header_center_x - w / 2
+			local y = header_y
+			local h = header_h
 			table.insert(skin.destination,
 				{id = -110, dst = {
 					{x = x, y = y, w = w, h = h, a = 200 + offset.bga_header.a}
@@ -1283,25 +1324,26 @@ local function main(keysNumber)
 			{id = "header_table", font = "genshin_bold", size = artist_size, align = 1, overflow = 1, ref = 1003},
 		})
 
-		local header_padding_x = 158
-		local header_center_x = geo.bga.center_x local header_y = geo.bga.y + geo.bga.h + 23 local header_w = geo.bga.w - header_padding_x * 2
+		local header_title_y = header_y + 15
+		local header_side_w = 168 -- level, difficulty, stageのぶんの幅
+		local header_title_w = header_w - header_side_w * 2
 		append_all(skin.destination, {
 			{id = "header_title", filter = 1, dst = {
-				{x = header_center_x, y = header_y + artist_size + 4, w = header_w, h = title_size}
+				{x = header_center_x, y = header_title_y + artist_size + 4, w = header_title_w, h = title_size}
 			}},
 			{id = "header_artist", filter = 1, op = {-1008}, dst = {
-				{x = header_center_x, y = header_y - 4, w = header_w, h = artist_size}
+				{x = header_center_x, y = header_title_y - 4, w = header_title_w, h = artist_size}
 			}},
 			-- artist & table lotate animation
 			{id = "header_artist", filter = 1, op = {1008}, dst = {
-				{time = 0, x = header_center_x, y = header_y - 4, w = header_w, h = artist_size, a = 255},
+				{time = 0, x = header_center_x, y = header_title_y - 4, w = header_title_w, h = artist_size, a = 255},
 				{time = 4000, a = 255},
 				{time = 6000, a = 0},
 				{time = 14000, a = 0},
 				{time = 16000, a = 255}
 			}},
 			{id = "header_table", filter = 1, op = {1008}, dst = {
-				{time = 0, x = header_center_x, y = header_y - 4, w = header_w, h = artist_size, a = 0, r = 229, g = 153, b = 255},
+				{time = 0, x = header_center_x, y = header_title_y - 4, w = header_title_w, h = artist_size, a = 0, r = 229, g = 153, b = 255},
 				{time = 6000, a = 0},
 				{time = 8000, a = 255},
 				{time = 12000, a = 255},
@@ -1311,18 +1353,18 @@ local function main(keysNumber)
 			-- title gradation
 			-- artistの後に描画するとartistが黒箱にならない
 			{id = "titlegradation_header", blend = 4, dst = {
-				{x = geo.bga.x + 158, y = header_y + artist_size + 4, w = header_w, h = title_size + 4}
+				{x = header_x + header_side_w, y = header_title_y + artist_size + 4, w = header_title_w, h = title_size + 4}
 			}},
 		})
 		-- difficulty
 		local margin_outside_x = 0
-		if geo.bga.w + geo.bga.frame_w * 2 == geo.bgaarea.w then -- BGAと他のエリアが接する場合は、headerの両サイドにマージンを設ける
+		if geo.bga.w == geo.bgaarea.w then -- BGAと他のエリアが接する場合は、headerの両サイドにマージンを設ける
 			margin_outside_x = 4
 		end
 		local difficulty_w = 145
-		local difficulty_x = geo.bga.x - geo.bga.frame_w + margin_outside_x
+		local difficulty_x = header_x + margin_outside_x
 		if is2P() then
-			difficulty_x = geo.bga.x + geo.bga.w + geo.bga.frame_w - difficulty_w - margin_outside_x
+			difficulty_x = header_x + header_w - difficulty_w - margin_outside_x
 		end
 		do
 			local img_w = 220 local img_h = 40
@@ -1334,7 +1376,7 @@ local function main(keysNumber)
 			local h = img_h * difficulty_w / img_w
 			for i = 1, 6 do
 				table.insert(skin.destination, {id = "difficulty_"..i, op = {149 + i}, filter = 1, dst = {
-					{x = difficulty_x, y = header_y + 32, w = difficulty_w, h = h},
+					{x = difficulty_x, y = header_title_y + 32, w = difficulty_w, h = h},
 				}})
 			end
 		end
@@ -1348,7 +1390,7 @@ local function main(keysNumber)
 					number({id = "level", src = "src_number_newtown", divx = 10, digit = 2, align = 1, ref = 96})
 				)
 			end
-			local y = header_y + 3 local h = 18 local text_w = 38 local num_w = 23 local space_x = 4
+			local y = header_title_y + 3 local h = 18 local text_w = 38 local num_w = 23 local space_x = 4
 			local x = difficulty_x + (difficulty_w - (text_w + num_w + space_x)) / 2
 			-- 中央寄せになるようにレベルの桁によって位置を調整
 			if main_state.number(96) >= 10 then
@@ -1377,11 +1419,11 @@ local function main(keysNumber)
 			})
 
 			local w = 147 local h = img_h * w / img_w
-			local x = geo.bga.x + geo.bga.w + geo.bga.frame_w - w - margin_outside_x
+			local x = header_x + header_w - w - margin_outside_x
 			if is2P() then
-				x = geo.bga.x - geo.bga.frame_w + margin_outside_x
+				x = header_x + margin_outside_x
 			end
-			local y = header_y + 25
+			local y = header_title_y + 25
 			local stage_id = "stage_beatoraja"
 			-- course stages
 			if main_state.option(290) then
@@ -1910,24 +1952,20 @@ local function main(keysNumber)
 	-- lane border white line レーン周りの白線
 	if property.hideFrames.item.off.isSelected() then
 		local w = 3
-		table.insert(skin.destination, {id = -110, dst = {
-			{x = geo.lane.x - (w + 1), y = geo.lane.y - (w + 1), w = geo.lane.w + (w + 1) * 2, h = geo.lane.h + (w + 1) * 2},
-		}})
-		local rgb = 200
-		table.insert(skin.destination, {id = -111, dst = {
-			{x = geo.lane.x - w, y = geo.lane.y - w, w = geo.lane.w + w * 2, h = geo.lane.h + w * 2, r = rgb, g = rgb, b = rgb},
-		}})
+		append_all(skin.destination, border_dst(geo.lane.x - w, geo.lane.y - w, geo.lane.w + w * 2, geo.lane.h + w * 2, {r = 0, g = 0, b = 0}, 255, 1, 1))
+		append_all(skin.destination, border_dst(geo.lane.x, geo.lane.y, geo.lane.w, geo.lane.h, {r = 200, g = 200, b = 200}, 255, w, w))
 	end
-	-- lanebg
-	table.insert(skin.destination, {id = -110, dst = {
-		{x = geo.lane.x, y = geo.lane.y, w = geo.lane.w, h = geo.lane.h},
-	}})
-	-- lanecolor
+	-- lane
 	do
-		local rgb = 5
-		for i = 1, keysNumber, 2 do
+		local black = {r = 0, g = 0, b = 0}
+		local white = {r = 5, g = 5, b = 5}
+		for i = 1, keysNumber + 1 do
+			local color = black
+			if i % 2 == 1 then
+				color = white
+			end
 			table.insert(skin.destination, {id = -111, offset = 3, dst = {
-				{x = geo.lane.each_x[i], y = geo.lane.y, w = geo.lane.each_w[i], h = geo.lane.h, r = rgb, g = rgb, b = rgb}
+				merge_all({x = geo.lane.each_x[i], y = geo.lane.y, w = math.ceil(geo.lane.each_w[i]), h = geo.lane.h, a = 255 + offset.lane.a}, color)
 			}})
 		end
 	end
