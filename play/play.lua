@@ -874,29 +874,29 @@ local function main(keysNumber)
 
 		local dst = {
 			{id = "frame_corner_upperleft"..frame_id, dst = {
-				{x = x, y = y + h - thickness_h, w = thickness_w, h = thickness_h}
+				{x = x - thickness_w, y = y + h, w = thickness_w, h = thickness_h}
 			}},
 			{id = "frame_corner_upperright"..frame_id, dst = {
-				{x = x + w - thickness_w, y = y + h - thickness_h, w = thickness_w, h = thickness_h}
+				{x = x + w, y = y + h, w = thickness_w, h = thickness_h}
 			}},
 			{id = "frame_corner_lowerleft"..frame_id, dst = {
-				{x = x, y = y, w = thickness_w, h = thickness_h}
+				{x = x - thickness_w, y = y - thickness_h, w = thickness_w, h = thickness_h}
 			}},
 			{id = "frame_corner_lowerright"..frame_id, dst = {
-				{x = x + w - thickness_w, y = y, w = thickness_w, h = thickness_h}
+				{x = x + w, y = y - thickness_h, w = thickness_w, h = thickness_h}
 			}},
 
 			{id = "frame_straight_upper"..frame_id, dst = {
-				{x = x + thickness_w, y = y + h - thickness_h, w = w - thickness_w * 2, h = thickness_h}
+				{x = x, y = y + h, w = w, h = thickness_h}
 			}},
 			{id = "frame_straight_lower"..frame_id, dst = {
-				{x = x + thickness_w, y = y, w = w - thickness_w * 2, h = thickness_h}
+				{x = x, y = y - thickness_h, w = w, h = thickness_h}
 			}},
 			{id = "frame_straight_left"..frame_id, dst = {
-				{x = x, y = y + thickness_h, w = thickness_w, h = h - thickness_h * 2}
+				{x = x - thickness_w, y = y, w = thickness_w, h = h}
 			}},
 			{id = "frame_straight_right"..frame_id, dst = {
-				{x = x + w - thickness_w, y = y + thickness_h, w = thickness_w, h = h - thickness_h * 2}
+				{x = x + w, y = y, w = thickness_w, h = h}
 			}},
 		}
 		for i, v in ipairs(dst) do
@@ -1132,8 +1132,7 @@ local function main(keysNumber)
 
 			-- frame
 			if property.hideFrames.item.off.isSelected() and property.fullscreenBga.item.off.isSelected() then
-				append_all(skin.destination, frame_dst(real_bga_x - geo.bga.frame_w, real_bga_y - geo.bga.frame_h, real_bga_w + geo.bga.frame_w * 2, real_bga_h + geo.bga.frame_h * 2,
-					bga_a, geo.bga.frame_w, geo.bga.frame_h, {}))
+				append_all(skin.destination, frame_dst(real_bga_x, real_bga_y, real_bga_w, real_bga_h, bga_a, geo.bga.frame_w, geo.bga.frame_h, {}))
 				
 				-- フレームの内側の黒いボーダー
 				append_all(skin.destination, border_dst(real_bga_x, real_bga_y, real_bga_w, real_bga_h, {r = 0, g = 0, b = 0}, bga_a, 3, 3))
@@ -1509,7 +1508,7 @@ local function main(keysNumber)
 			)
 
 			local frame_thickness = 5
-			local f_dst = frame_dst(x - frame_thickness, y - frame_thickness, w + frame_thickness * 2, geo.playinfo.h + frame_thickness * 2, a, frame_thickness, frame_thickness, {timer = timer})
+			local f_dst = frame_dst(x, y, w, geo.playinfo.h, a, frame_thickness, frame_thickness, {timer = timer})
 			append_all(skin.destination, f_dst)
 		end
 	end
@@ -2323,7 +2322,7 @@ local function main(keysNumber)
 				{x = stagefile_x, y = y + graph_h, w = stagefile_w, h = space_h, r = 100, g = 100, b = 100},
 			}},
 		}
-		dst = merge_all(dst, frame_dst(stagefile_x - frame_w, y - frame_h, stagefile_w + frame_w * 2, stagefile_h + graph_h + space_h + frame_h * 2, 255, frame_w, frame_h, {op = {80}}))
+		dst = merge_all(dst, frame_dst(stagefile_x, y, stagefile_w, stagefile_h + graph_h + space_h, 255, frame_w, frame_h, {op = {80}}))
 		-- レーンカバー変更中は透過(緑数字が見えるようにするため)
 		local dst_default = deepcopy(dst)
 		for i, v in ipairs(dst_default) do
