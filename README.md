@@ -1,11 +1,17 @@
 # GenericTheme
-A play skin(7K/5K) for beatoraja made by lua.
+Play skin(7K/5K) for beatoraja made by lua.
 
 ## Download
 [Here](https://github.com/Shimi9999/GenericTheme/archive/refs/heads/master.zip)
 
+## Screenshots
+default
+![play_default](/screenshot/play_default.png)  
+customize
+![play_customize](/screenshot/play_customize.png)
+
 ## Support
-beatoraja 0.8.2 and later versions
+beatoraja 0.8.3 and later versions
 
 ## License
 lua codes: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)  
