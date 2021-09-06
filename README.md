@@ -6,9 +6,9 @@ Play skin(7K/5K) for beatoraja made by lua.
 
 ## Screenshots
 default
-![play_default](/screenshot/play_default.png)  
+![play_default](/screenshot/play_default.png?raw=true)  
 customize
-![play_customize](/screenshot/play_customize.png)
+![play_customize](/screenshot/play_customize.png?raw=true)
 
 ## Support
 beatoraja 0.8.3 and later versions
