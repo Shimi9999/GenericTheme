@@ -1382,8 +1382,10 @@ local function main(keysNumber)
 		})
 		-- difficulty
 		local margin_outside_x = 0
-		if geo.bga.w == geo.bgaarea.w then -- BGAと他のエリアが接する場合は、headerの両サイドにマージンを設ける
-			margin_outside_x = 4
+		local margin_max = 4
+		local bga_diff_w = geo.bgaarea.w - (geo.bga.w + geo.bga.frame_w * 2)
+		if bga_diff_w <= margin_max then -- BGAと他のエリアが近接する場合は、headerの両サイドにマージンを設ける
+			margin_outside_x = margin_max - bga_diff_w
 		end
 		local difficulty_w = 145
 		local difficulty_x = header_x + margin_outside_x
