@@ -158,7 +158,16 @@ local property = {
 			on = {name = "On", op = 976},
 		}
 	},
-	hideFrames = { -- laneborderwhiteline,musicprogressbar,BGA,BPM,playinfoが対象 STAGEFILEは非対象
+	-- レーン、スコアグラフ、BGAの位置が、レーン幅やスコアグラフ配置等によって相対的に調整されなくなる。スコアグラフのNear/Farはどちらを選んでもNear固定になる。
+	absolutePositioning = {
+		name = "Absolute Positioning",
+		item = {
+			off = {name = "Off", op = 977},
+			on = {name = "On", op = 978},
+		}
+	},
+	-- laneborderwhiteline,musicprogressbar,BGA,BPM,playinfoが対象 STAGEFILEは非対象
+	hideFrames = {
 		name = "Hide Frames",
 		item = {
 			off = {name = "Off", op = 965},
@@ -190,6 +199,7 @@ local property_order = {
 	"lowerLaneArea",
 	"failedAnimation",
 	"fullscreenBga",
+	"absolutePositioning",
 	"hideFrames",
 	"total"
 }
@@ -243,6 +253,9 @@ local function isScoreGraphNear()
 end
 local function isScoreGraphFar()
 	return property.scoreGraphPosition.item.far.isSelected()
+end
+local function isAbsolutePositioning()
+	return property.absolutePositioning.item.on.isSelected()
 end
 
 local filepath = {
@@ -332,17 +345,16 @@ local function main(keysNumber)
 
 	-- note geometry
 	geo.note = {}
-	geo.note.base_white_w = 60
-	geo.note.base_black_w = 48
-	geo.note.base_scratch_w = 108
+	geo.note.original_white_w = 60
+	geo.note.original_black_w = 48
+	geo.note.original_scratch_w = 108
 	geo.note.scale_w = 1 + offset.lane_width.w / 100
-	geo.note.white_w = geo.note.base_white_w * geo.note.scale_w
-	geo.note.black_w = geo.note.base_black_w * geo.note.scale_w
-	geo.note.scratch_w = geo.note.base_scratch_w * geo.note.scale_w
+	geo.note.white_w = geo.note.original_white_w * geo.note.scale_w
+	geo.note.black_w = geo.note.original_black_w * geo.note.scale_w
+	geo.note.scratch_w = geo.note.original_scratch_w * geo.note.scale_w
 
 	-- lane and lanearea geometry
 	geo.lanearea = {}
-	geo.lanearea.x = 0
 	geo.lanearea.padding_left = 54
 	geo.lanearea.padding_right = 14
 	if is2P() then
@@ -352,22 +364,35 @@ local function main(keysNumber)
 	geo.lane = {}
 	geo.lane.separateline_w = 3
 	geo.lane.y = 226
+	geo.lane.h = header.h - geo.lane.y
+	geo.lane.fivekeycover_w = geo.note.white_w + geo.note.black_w + geo.lane.separateline_w * 2
+	geo.lane.judgeline_h = 10
+
 	geo.lane.w = geo.note.scratch_w + geo.note.white_w * 4 + geo.note.black_w * 3 + geo.lane.separateline_w * 7
 	geo.lanearea.w = geo.lane.w + geo.lanearea.padding_left + geo.lanearea.padding_right
-	geo.lane.h = header.h - geo.lane.y
-	if is2P() then
-		geo.lanearea.x = header.w - geo.lanearea.w
+
+	geo.lane.original_w = geo.note.original_scratch_w + geo.note.original_white_w * 4 + geo.note.original_black_w * 3 + geo.lane.separateline_w * 7
+	geo.lanearea.original_w = geo.lane.original_w + geo.lanearea.padding_left + geo.lanearea.padding_right
+
+	function set_lane_x(lanearea_w)
+		geo.lanearea.x = 0
+		if is2P() then
+			geo.lanearea.x = header.w - lanearea_w
+		end
+		geo.lanearea.x = geo.lanearea.x + offset.lane.x
+		geo.lane.x = geo.lanearea.x + geo.lanearea.padding_left
 	end
-	geo.lanearea.base_x = geo.lanearea.x -- offset未適用のscoregrapharea,bgaareaの相対位置調整用座標
-	geo.lanearea.x = geo.lanearea.x + offset.lane.x
-	geo.lane.x = geo.lanearea.x + geo.lanearea.padding_left
+	if isAbsolutePositioning() then
+		set_lane_x(geo.lanearea.original_w)
+	else
+		set_lane_x(geo.lanearea.w)
+	end
+
 	geo.lane.center_x = geo.lane.x + geo.lane.w / 2
-	geo.lane.fivekeycover_w = geo.note.white_w + geo.note.black_w + geo.lane.separateline_w * 2
 	geo.lane.fivekey_center_x = geo.lane.center_x - geo.lane.fivekeycover_w / 2
 	if isRightScratch() then
 		geo.lane.fivekey_center_x = geo.lane.center_x + geo.lane.fivekeycover_w / 2
 	end
-	geo.lane.judgeline_h = 10
 
 	geo.lane.order = {8, 1, 2, 3, 4, 5, 6, 7}
 	if keysNumber == 5 then
@@ -399,8 +424,9 @@ local function main(keysNumber)
 	geo.scoregrapharea.w = 0
 	if isScoreGraph() then
 		geo.scoregraph = {}
+		geo.scoregraph.bar_original_w = 58
 		if isScoreGraphNormal() then
-			geo.scoregraph.bar_w = 58
+			geo.scoregraph.bar_w = geo.scoregraph.bar_original_w
 		else
 			geo.scoregraph.bar_w = 28
 		end
@@ -408,22 +434,31 @@ local function main(keysNumber)
 		geo.scoregraph.bar_h = 740
 		geo.scoregraph.bar_space = 4
 		geo.scoregraph.w = geo.scoregraph.bar_w * 4 + geo.scoregraph.bar_space * 3
+		geo.scoregraph.original_w = geo.scoregraph.bar_original_w * 4 + geo.scoregraph.bar_space * 3
 		geo.scoregraph.h = geo.scoregraph.bar_h + 20
 
 		local scoregraph_margin_x = 6
-
 		geo.scoregrapharea.w = geo.scoregraph.w + scoregraph_margin_x * 2
-		if is1P() then
-			if isScoreGraphNear() then
-				geo.scoregrapharea.x = geo.lanearea.base_x + geo.lanearea.w
+		geo.scoregrapharea.original_w = geo.scoregraph.original_w + scoregraph_margin_x * 2
+		if isAbsolutePositioning() then
+			if is1P() then
+				geo.scoregrapharea.x = geo.lanearea.x + geo.lanearea.original_w
 			else
-				geo.scoregrapharea.x = header.w - geo.scoregrapharea.w
+				geo.scoregrapharea.x = geo.lanearea.x - geo.scoregrapharea.original_w
 			end
 		else
-			if isScoreGraphNear() then
-				geo.scoregrapharea.x = geo.lanearea.base_x - geo.scoregrapharea.w
+			if is1P() then
+				if isScoreGraphNear() then
+					geo.scoregrapharea.x = geo.lanearea.x + geo.lanearea.w
+				else
+					geo.scoregrapharea.x = header.w - geo.scoregrapharea.w
+				end
 			else
-				geo.scoregrapharea.x = 0
+				if isScoreGraphNear() then
+					geo.scoregrapharea.x = geo.lanearea.x - geo.scoregrapharea.w
+				else
+					geo.scoregrapharea.x = 0
+				end
 			end
 		end
 
@@ -433,25 +468,34 @@ local function main(keysNumber)
 
 	-- bga and bgaarea geometry
 	geo.bgaarea = {}
-	if is1P() then
-		geo.bgaarea.x = geo.lanearea.base_x + geo.lanearea.w
-		if isScoreGraph() and isScoreGraphNear() then
-			geo.bgaarea.x = geo.bgaarea.x + geo.scoregrapharea.w
+	if isAbsolutePositioning() then
+		geo.bgaarea.w = header.w - geo.lanearea.original_w
+		if is1P() then
+			geo.bgaarea.x = geo.lanearea.x + geo.lanearea.original_w
+		else
+			geo.bgaarea.x = 0
 		end
 	else
-		geo.bgaarea.x = 0
-		if isScoreGraph() and isScoreGraphFar() then
-			geo.bgaarea.x = geo.bgaarea.x + geo.scoregrapharea.w
+		geo.bgaarea.w = header.w - (geo.lanearea.w + geo.scoregrapharea.w)
+		if is1P() then
+			geo.bgaarea.x = geo.lanearea.x + geo.lanearea.w
+			if isScoreGraph() and isScoreGraphNear() then
+				geo.bgaarea.x = geo.bgaarea.x + geo.scoregrapharea.w
+			end
+		else
+			geo.bgaarea.x = 0
+			if isScoreGraph() and isScoreGraphFar() then
+				geo.bgaarea.x = geo.bgaarea.x + geo.scoregrapharea.w
+			end
 		end
 	end
-	geo.bgaarea.w = header.w - (geo.lanearea.w + geo.scoregrapharea.w)
 	geo.bgaarea.center_x = geo.bgaarea.x + geo.bgaarea.w / 2
 
 	geo.bga = {}
 	geo.bga.frame_w = 10
 	geo.bga.frame_h = 8
 	geo.bga.w = 1152
-	if geo.bgaarea.w - geo.bga.frame_w * 2 < geo.bga.w then
+	if geo.bgaarea.w < geo.bga.w + geo.bga.frame_w * 2 then
 		geo.bga.w = geo.bgaarea.w - geo.bga.frame_w * 2
 	end
 	geo.bga.h = 864
@@ -566,53 +610,53 @@ local function main(keysNumber)
 		local ln_cycle = 256
 		append_all(skin.image, {
 			-- normal note
-			{id = "note_w", src = "src_notes", x = white_x, y = note_y, w = geo.note.base_white_w, h = 36},
-			{id = "note_b", src = "src_notes", x = black_x, y = note_y, w = geo.note.base_black_w, h = 36},
-			{id = "note_s", src = "src_notes", x = scratch_x, y = note_y, w = geo.note.base_scratch_w, h = 36},
+			{id = "note_w", src = "src_notes", x = white_x, y = note_y, w = geo.note.original_white_w, h = 36},
+			{id = "note_b", src = "src_notes", x = black_x, y = note_y, w = geo.note.original_black_w, h = 36},
+			{id = "note_s", src = "src_notes", x = scratch_x, y = note_y, w = geo.note.original_scratch_w, h = 36},
 			-- ln end
-			{id = "lne_w", src = "src_notes", x = white_x, y = lne_y, w = geo.note.base_white_w, h = 36},
-			{id = "lne_b", src = "src_notes", x = black_x, y = lne_y, w = geo.note.base_black_w, h = 36},
-			{id = "lne_s", src = "src_notes", x = scratch_x, y = lne_y, w = geo.note.base_scratch_w, h = 36},
+			{id = "lne_w", src = "src_notes", x = white_x, y = lne_y, w = geo.note.original_white_w, h = 36},
+			{id = "lne_b", src = "src_notes", x = black_x, y = lne_y, w = geo.note.original_black_w, h = 36},
+			{id = "lne_s", src = "src_notes", x = scratch_x, y = lne_y, w = geo.note.original_scratch_w, h = 36},
 			-- ln start
-			{id = "lns_w", src = "src_notes", x = white_x, y = lns_y, w = geo.note.base_white_w, h = 36},
-			{id = "lns_b", src = "src_notes", x = black_x, y = lns_y, w = geo.note.base_black_w, h = 36},
-			{id = "lns_s", src = "src_notes", x = scratch_x, y = lns_y, w = geo.note.base_scratch_w, h = 36},
+			{id = "lns_w", src = "src_notes", x = white_x, y = lns_y, w = geo.note.original_white_w, h = 36},
+			{id = "lns_b", src = "src_notes", x = black_x, y = lns_y, w = geo.note.original_black_w, h = 36},
+			{id = "lns_s", src = "src_notes", x = scratch_x, y = lns_y, w = geo.note.original_scratch_w, h = 36},
 			-- ln body (inactive/未入力)
-			{id = "lnb_w", src = "src_notes", x = white_x, y = lnb_y, w = geo.note.base_white_w, h = 36},
-			{id = "lnb_b", src = "src_notes", x = black_x, y = lnb_y, w = geo.note.base_black_w, h = 36},
-			{id = "lnb_s", src = "src_notes", x = scratch_x, y = lnb_y, w = geo.note.base_scratch_w, h = 36},
+			{id = "lnb_w", src = "src_notes", x = white_x, y = lnb_y, w = geo.note.original_white_w, h = 36},
+			{id = "lnb_b", src = "src_notes", x = black_x, y = lnb_y, w = geo.note.original_black_w, h = 36},
+			{id = "lnb_s", src = "src_notes", x = scratch_x, y = lnb_y, w = geo.note.original_scratch_w, h = 36},
 			-- ln body (active/入力中)
-			{id = "lna_w", src = "src_notes", x = white_x, y = lna_y, w = geo.note.base_white_w, h = 72, divy = 2, cycle = ln_cycle},
-			{id = "lna_b", src = "src_notes", x = black_x, y = lna_y, w = geo.note.base_black_w, h = 72, divy = 2, cycle = ln_cycle},
-			{id = "lna_s", src = "src_notes", x = scratch_x, y = lna_y, w = geo.note.base_scratch_w, h = 72, divy = 2, cycle = ln_cycle},
+			{id = "lna_w", src = "src_notes", x = white_x, y = lna_y, w = geo.note.original_white_w, h = 72, divy = 2, cycle = ln_cycle},
+			{id = "lna_b", src = "src_notes", x = black_x, y = lna_y, w = geo.note.original_black_w, h = 72, divy = 2, cycle = ln_cycle},
+			{id = "lna_s", src = "src_notes", x = scratch_x, y = lna_y, w = geo.note.original_scratch_w, h = 72, divy = 2, cycle = ln_cycle},
 			-- hcn end
-			{id = "hcne_w", src = "src_notes", x = white_x, y = hcne_y, w = geo.note.base_white_w, h = 36},
-			{id = "hcne_b", src = "src_notes", x = black_x, y = hcne_y, w = geo.note.base_black_w, h = 36},
-			{id = "hcne_s", src = "src_notes", x = scratch_x, y = hcne_y, w = geo.note.base_scratch_w, h = 36},
+			{id = "hcne_w", src = "src_notes", x = white_x, y = hcne_y, w = geo.note.original_white_w, h = 36},
+			{id = "hcne_b", src = "src_notes", x = black_x, y = hcne_y, w = geo.note.original_black_w, h = 36},
+			{id = "hcne_s", src = "src_notes", x = scratch_x, y = hcne_y, w = geo.note.original_scratch_w, h = 36},
 			-- hcn start
-			{id = "hcns_w", src = "src_notes", x = white_x, y = hcns_y, w = geo.note.base_white_w, h = 36},
-			{id = "hcns_b", src = "src_notes", x = black_x, y = hcns_y, w = geo.note.base_black_w, h = 36},
-			{id = "hcns_s", src = "src_notes", x = scratch_x, y = hcns_y, w = geo.note.base_scratch_w, h = 36},
+			{id = "hcns_w", src = "src_notes", x = white_x, y = hcns_y, w = geo.note.original_white_w, h = 36},
+			{id = "hcns_b", src = "src_notes", x = black_x, y = hcns_y, w = geo.note.original_black_w, h = 36},
+			{id = "hcns_s", src = "src_notes", x = scratch_x, y = hcns_y, w = geo.note.original_scratch_w, h = 36},
 			-- hcn body (inactive)
-			{id = "hcnb_w", src = "src_notes", x = white_x, y = hcnb_y, w = geo.note.base_white_w, h = 18},
-			{id = "hcnb_b", src = "src_notes", x = black_x, y = hcnb_y, w = geo.note.base_black_w, h = 18},
-			{id = "hcnb_s", src = "src_notes", x = scratch_x, y = hcnb_y, w = geo.note.base_scratch_w, h = 18},
+			{id = "hcnb_w", src = "src_notes", x = white_x, y = hcnb_y, w = geo.note.original_white_w, h = 18},
+			{id = "hcnb_b", src = "src_notes", x = black_x, y = hcnb_y, w = geo.note.original_black_w, h = 18},
+			{id = "hcnb_s", src = "src_notes", x = scratch_x, y = hcnb_y, w = geo.note.original_scratch_w, h = 18},
 			-- hcn body (active)
-			{id = "hcna_w", src = "src_notes", x = white_x, y = hcna_y, w = geo.note.base_white_w, h = 36, divy = 2, cycle = ln_cycle},
-			{id = "hcna_b", src = "src_notes", x = black_x, y = hcna_y, w = geo.note.base_black_w, h = 36, divy = 2, cycle = ln_cycle},
-			{id = "hcna_s", src = "src_notes", x = scratch_x, y = hcna_y, w = geo.note.base_scratch_w, h = 36, divy = 2, cycle = ln_cycle},
+			{id = "hcna_w", src = "src_notes", x = white_x, y = hcna_y, w = geo.note.original_white_w, h = 36, divy = 2, cycle = ln_cycle},
+			{id = "hcna_b", src = "src_notes", x = black_x, y = hcna_y, w = geo.note.original_black_w, h = 36, divy = 2, cycle = ln_cycle},
+			{id = "hcna_s", src = "src_notes", x = scratch_x, y = hcna_y, w = geo.note.original_scratch_w, h = 36, divy = 2, cycle = ln_cycle},
 			-- hcn body (reactive/途中から入力)
-			{id = "hcnr_w", src = "src_notes", x = white_x, y = hcnr_y, w = geo.note.base_white_w, h = 36, divy = 2, cycle = ln_cycle},
-			{id = "hcnr_b", src = "src_notes", x = black_x, y = hcnr_y, w = geo.note.base_black_w, h = 36, divy = 2, cycle = ln_cycle},
-			{id = "hcnr_s", src = "src_notes", x = scratch_x, y = hcnr_y, w = geo.note.base_scratch_w, h = 36, divy = 2, cycle = ln_cycle},
+			{id = "hcnr_w", src = "src_notes", x = white_x, y = hcnr_y, w = geo.note.original_white_w, h = 36, divy = 2, cycle = ln_cycle},
+			{id = "hcnr_b", src = "src_notes", x = black_x, y = hcnr_y, w = geo.note.original_black_w, h = 36, divy = 2, cycle = ln_cycle},
+			{id = "hcnr_s", src = "src_notes", x = scratch_x, y = hcnr_y, w = geo.note.original_scratch_w, h = 36, divy = 2, cycle = ln_cycle},
 			-- hcn damage (miss)
-			{id = "hcnd_w", src = "src_notes", x = white_x, y = hcnd_y, w = geo.note.base_white_w, h = 36, divy = 2, cycle = ln_cycle / 2},
-			{id = "hcnd_b", src = "src_notes", x = black_x, y = hcnd_y, w = geo.note.base_black_w, h = 36, divy = 2, cycle = ln_cycle / 2},
-			{id = "hcnd_s", src = "src_notes", x = scratch_x, y = hcnd_y, w = geo.note.base_scratch_w, h = 36, divy = 2, cycle = ln_cycle / 2},
+			{id = "hcnd_w", src = "src_notes", x = white_x, y = hcnd_y, w = geo.note.original_white_w, h = 36, divy = 2, cycle = ln_cycle / 2},
+			{id = "hcnd_b", src = "src_notes", x = black_x, y = hcnd_y, w = geo.note.original_black_w, h = 36, divy = 2, cycle = ln_cycle / 2},
+			{id = "hcnd_s", src = "src_notes", x = scratch_x, y = hcnd_y, w = geo.note.original_scratch_w, h = 36, divy = 2, cycle = ln_cycle / 2},
 			-- mine
-			{id = "mine_w", src = "src_mine", x = white_x, y = 0, w = geo.note.base_white_w, h = 36},
-			{id = "mine_b", src = "src_mine", x = black_x, y = 0, w = geo.note.base_black_w, h = 36},
-			{id = "mine_s", src = "src_mine", x = scratch_x, y = 0, w = geo.note.base_scratch_w, h = 36},
+			{id = "mine_w", src = "src_mine", x = white_x, y = 0, w = geo.note.original_white_w, h = 36},
+			{id = "mine_b", src = "src_mine", x = black_x, y = 0, w = geo.note.original_black_w, h = 36},
+			{id = "mine_s", src = "src_mine", x = scratch_x, y = 0, w = geo.note.original_scratch_w, h = 36},
 
 			{id = "section_line", src = "src_white1dot", x = 0, y = 0, w = 1, h = 1},
 		})
@@ -1911,6 +1955,7 @@ local function main(keysNumber)
 		if is2P() then
 			x = geo.lanearea.x + geo.lanearea.w - 24 - w
 		end
+		x = x + offset.lane.x
 		local y = geo.lane.y + margin_y
 		if property.hideFrames.item.off.isSelected() then
 			append_all(skin.destination, {
