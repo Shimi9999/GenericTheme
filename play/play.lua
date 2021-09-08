@@ -158,6 +158,18 @@ local property = {
 			on = {name = "On", op = 976},
 		}
 	},
+	-- レーンを画面中央に配置する。レーン位置の基準はレーンの中心になる(absolutePositioningのOn/Offに関わらず)。
+	-- on_bga_leftの時、ScoreGraphは1P側表示、bgaarea内の表示(PlayInfo、NotesGraph、TimingVisualizer、BGA Header)は2P側表示になる。on_bga_rightはそれぞれ反転。
+	-- プレイヤーサイドによって変化するのは、レーンの表示向きのみ。
+	-- スコアグラフのNear/Farはどちらを選んでも位置がレーン側面になる。
+	laneCentering = {
+		name = "Lane Centering",
+		item = {
+			off = {name = "Off", op = 979},
+			on_bga_left = {name = "On(L:BGA,R:ScoreGraph)", op = 980},
+			on_bga_right = {name = "On(L:ScoreGraph,R:BGA)", op = 981},
+		}
+	},
 	-- レーン、スコアグラフ、BGAの位置が、レーン幅やスコアグラフ配置等によって相対的に調整されなくなる。スコアグラフのNear/Farはどちらを選んでもNear固定になる。
 	absolutePositioning = {
 		name = "Absolute Positioning",
@@ -199,6 +211,7 @@ local property_order = {
 	"lowerLaneArea",
 	"failedAnimation",
 	"fullscreenBga",
+	"laneCentering",
 	"absolutePositioning",
 	"hideFrames",
 	"total"
@@ -254,8 +267,39 @@ end
 local function isScoreGraphFar()
 	return property.scoreGraphPosition.item.far.isSelected()
 end
+local function isLaneCentering()
+	return not property.laneCentering.item.off.isSelected()
+end
+local function isLaneCenteringBgaLeft()
+	return property.laneCentering.item.on_bga_left.isSelected()
+end
+local function isLaneCenteringBgaRight()
+	return property.laneCentering.item.on_bga_right.isSelected()
+end
 local function isAbsolutePositioning()
 	return property.absolutePositioning.item.on.isSelected()
+end
+
+local function isBgaArea1P()
+	if isLaneCentering() then
+		return isLaneCenteringBgaRight()
+	else
+		return is1P()
+	end
+end
+local function isBgaArea2P()
+	return not isBgaArea1P()
+end
+
+local function isScoregraph1P()
+	if isLaneCentering() then
+		return isLaneCenteringBgaLeft()
+	else
+		return is1P()
+	end
+end
+local function isScoregraph2P()
+	return not isScoregraph1P()
 end
 
 local filepath = {
@@ -370,23 +414,23 @@ local function main(keysNumber)
 
 	geo.lane.w = geo.note.scratch_w + geo.note.white_w * 4 + geo.note.black_w * 3 + geo.lane.separateline_w * 7
 	geo.lanearea.w = geo.lane.w + geo.lanearea.padding_left + geo.lanearea.padding_right
-
 	geo.lane.original_w = geo.note.original_scratch_w + geo.note.original_white_w * 4 + geo.note.original_black_w * 3 + geo.lane.separateline_w * 7
 	geo.lanearea.original_w = geo.lane.original_w + geo.lanearea.padding_left + geo.lanearea.padding_right
 
-	function set_lane_x(lanearea_w)
+	if isLaneCentering() then
+		geo.lanearea.x = (header.w - geo.lanearea.w) / 2
+	else
 		geo.lanearea.x = 0
 		if is2P() then
-			geo.lanearea.x = header.w - lanearea_w
+			if isAbsolutePositioning() then
+				geo.lanearea.x = header.w - geo.lanearea.original_w
+			else
+				geo.lanearea.x = header.w - geo.lanearea.w
+			end
 		end
-		geo.lanearea.x = geo.lanearea.x + offset.lane.x
-		geo.lane.x = geo.lanearea.x + geo.lanearea.padding_left
 	end
-	if isAbsolutePositioning() then
-		set_lane_x(geo.lanearea.original_w)
-	else
-		set_lane_x(geo.lanearea.w)
-	end
+	geo.lanearea.x = geo.lanearea.x + offset.lane.x
+	geo.lane.x = geo.lanearea.x + geo.lanearea.padding_left
 
 	geo.lane.center_x = geo.lane.x + geo.lane.w / 2
 	geo.lane.fivekey_center_x = geo.lane.center_x - geo.lane.fivekeycover_w / 2
@@ -440,24 +484,40 @@ local function main(keysNumber)
 		local scoregraph_margin_x = 6
 		geo.scoregrapharea.w = geo.scoregraph.w + scoregraph_margin_x * 2
 		geo.scoregrapharea.original_w = geo.scoregraph.original_w + scoregraph_margin_x * 2
-		if isAbsolutePositioning() then
-			if is1P() then
-				geo.scoregrapharea.x = geo.lanearea.x + geo.lanearea.original_w
-			else
-				geo.scoregrapharea.x = geo.lanearea.x - geo.scoregrapharea.original_w
-			end
-		else
-			if is1P() then
-				if isScoreGraphNear() then
-					geo.scoregrapharea.x = geo.lanearea.x + geo.lanearea.w
+		if isLaneCentering() then
+			if isAbsolutePositioning() then
+				if isLaneCenteringBgaLeft() then
+					geo.scoregrapharea.x = (header.w + geo.lanearea.original_w) / 2
 				else
-					geo.scoregrapharea.x = header.w - geo.scoregrapharea.w
+					geo.scoregrapharea.x = (header.w - geo.lanearea.original_w) / 2 - geo.scoregrapharea.original_w
 				end
 			else
-				if isScoreGraphNear() then
-					geo.scoregrapharea.x = geo.lanearea.x - geo.scoregrapharea.w
+				if isLaneCenteringBgaLeft() then
+					geo.scoregrapharea.x = (header.w + geo.lanearea.w) / 2
 				else
-					geo.scoregrapharea.x = 0
+					geo.scoregrapharea.x = (header.w - geo.lanearea.w) / 2 - geo.scoregrapharea.w
+				end
+			end
+		else
+			if isAbsolutePositioning() then
+				if is1P() then
+					geo.scoregrapharea.x = geo.lanearea.x + geo.lanearea.original_w
+				else
+					geo.scoregrapharea.x = geo.lanearea.x - geo.scoregrapharea.original_w
+				end
+			else
+				if is1P() then
+					if isScoreGraphNear() then
+						geo.scoregrapharea.x = geo.lanearea.x + geo.lanearea.w
+					else
+						geo.scoregrapharea.x = header.w - geo.scoregrapharea.w
+					end
+				else
+					if isScoreGraphNear() then
+						geo.scoregrapharea.x = geo.lanearea.x - geo.scoregrapharea.w
+					else
+						geo.scoregrapharea.x = 0
+					end
 				end
 			end
 		end
@@ -468,24 +528,42 @@ local function main(keysNumber)
 
 	-- bga and bgaarea geometry
 	geo.bgaarea = {}
-	if isAbsolutePositioning() then
-		geo.bgaarea.w = header.w - geo.lanearea.original_w
-		if is1P() then
-			geo.bgaarea.x = geo.lanearea.x + geo.lanearea.original_w
-		else
-			geo.bgaarea.x = 0
-		end
-	else
-		geo.bgaarea.w = header.w - (geo.lanearea.w + geo.scoregrapharea.w)
-		if is1P() then
-			geo.bgaarea.x = geo.lanearea.x + geo.lanearea.w
-			if isScoreGraph() and isScoreGraphNear() then
-				geo.bgaarea.x = geo.bgaarea.x + geo.scoregrapharea.w
+	if isLaneCentering() then
+		if isAbsolutePositioning() then
+			geo.bgaarea.w = (header.w - geo.lanearea.original_w) / 2
+			if isLaneCenteringBgaLeft() then
+				geo.bgaarea.x = 0
+			else
+				geo.bgaarea.x = (header.w + geo.lanearea.original_w) / 2
 			end
 		else
-			geo.bgaarea.x = 0
-			if isScoreGraph() and isScoreGraphFar() then
-				geo.bgaarea.x = geo.bgaarea.x + geo.scoregrapharea.w
+			geo.bgaarea.w = (header.w - geo.lanearea.w) / 2
+			if isLaneCenteringBgaLeft() then
+				geo.bgaarea.x = 0
+			else
+				geo.bgaarea.x = (header.w + geo.lanearea.w) / 2
+			end
+		end
+	else
+		if isAbsolutePositioning() then
+			geo.bgaarea.w = header.w - geo.lanearea.original_w
+			if is1P() then
+				geo.bgaarea.x = geo.lanearea.x + geo.lanearea.original_w
+			else
+				geo.bgaarea.x = 0
+			end
+		else
+			geo.bgaarea.w = header.w - (geo.lanearea.w + geo.scoregrapharea.w)
+			if is1P() then
+				geo.bgaarea.x = geo.lanearea.x + geo.lanearea.w
+				if isScoreGraph() and isScoreGraphNear() then
+					geo.bgaarea.x = geo.bgaarea.x + geo.scoregrapharea.w
+				end
+			else
+				geo.bgaarea.x = 0
+				if isScoreGraph() and isScoreGraphFar() then
+					geo.bgaarea.x = geo.bgaarea.x + geo.scoregrapharea.w
+				end
 			end
 		end
 	end
@@ -1389,7 +1467,7 @@ local function main(keysNumber)
 		end
 		local difficulty_w = 145
 		local difficulty_x = header_x + margin_outside_x
-		if is2P() then
+		if isBgaArea2P() then
 			difficulty_x = header_x + header_w - difficulty_w - margin_outside_x
 		end
 		do
@@ -1446,7 +1524,7 @@ local function main(keysNumber)
 
 			local w = 147 local h = img_h * w / img_w
 			local x = header_x + header_w - w - margin_outside_x
-			if is2P() then
+			if isBgaArea2P() then
 				x = header_x + margin_outside_x
 			end
 			local y = header_title_y + 25
@@ -1481,7 +1559,7 @@ local function main(keysNumber)
 		local w = geo.bga.w / 2 - 20
 		local h = 130
 		local x = geo.bga.center_x
-		if is2P() then
+		if isBgaArea2P() then
 			x = geo.bga.x + 20
 		end
 		-- notesgraph
@@ -1532,7 +1610,7 @@ local function main(keysNumber)
 			w = 130
 		end
 		local x = geo.bga.x + 20
-		if is2P() then
+		if isBgaArea2P() then
 			x = geo.bga.x + geo.bga.w - w - 20
 		end
 		local y = geo.bga.y + 20
@@ -1609,7 +1687,7 @@ local function main(keysNumber)
 				end
 				local text_x = geo.scoregraph.x
 				local text_y = line_y + 2
-				if is2P() then
+				if isScoregraph2P() then
 					text_x = geo.scoregraph.x + geo.scoregraph.w - text_w
 				end
 
@@ -1657,7 +1735,7 @@ local function main(keysNumber)
 			local bar_now_x = geo.scoregraph.x + geo.scoregraph.bar_w
 			local bar_best_x = geo.scoregraph.x + geo.scoregraph.bar_w * 2 + geo.scoregraph.bar_space
 			local bar_target_x = geo.scoregraph.x + geo.scoregraph.bar_w * 3 + geo.scoregraph.bar_space * 2
-			if is2P() then
+			if isScoregraph2P() then
 				bar_now_x = geo.scoregraph.x + geo.scoregraph.bar_w * 2 + geo.scoregraph.bar_space * 3
 				bar_best_x = geo.scoregraph.x + geo.scoregraph.bar_w + geo.scoregraph.bar_space * 2
 				bar_target_x = geo.scoregraph.x + geo.scoregraph.bar_space
