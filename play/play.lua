@@ -635,6 +635,7 @@ local function main(keysNumber)
 
 	skin.font = {
 		{id = "genshin_bold", path = "../common/font/GenShinGothic-Bold.ttf"},
+		{id = "genshin_monospace_bold_bitmap", path = "../common/font/GenShinGothic-Monospace-Bold-bmp.fnt"},
 		{id = "newtown", path = "../common/font/Newtown-8e6M.ttf"},
 	}
 
@@ -1953,9 +1954,10 @@ local function main(keysNumber)
 			append_all(skin.image, {
 				{id = "graphinfo_text_score", src = "src_scoregraph_info", x = 0, y = 0, w = text_img_w, h = text_img_h},
 				{id = "graphinfo_text_mybest", src = "src_scoregraph_info", x = 0, y = text_img_h, w = text_img_w, h = text_img_h},
-				--{id = "graphinfo_text_target", src = "src_scoregraph_info", x = 0, y = text_img_h * 2, w = text_img_w, h = text_img_h},
-				{id = "graphinfo_text_ranks", src = "src_scoregraph_info", x = 0, y = text_img_h * 3, w = text_img_w, h = text_img_h * 11, divy = 11, len = 11, ref = 77},
 			})
+			
+			local target_text_size = 23
+			table.insert(skin.text, {id = "graphinfo_text_target", font = "genshin_monospace_bold_bitmap", size = target_text_size, align = 1, ref = 3})
 
 			-- background
 			local base_y = 12
@@ -1999,8 +2001,8 @@ local function main(keysNumber)
 			local text_x = label_x + (label_w - text_w) / 2
 			local text_y = y + (label_h - text_h) / 2
 			append_all(skin.destination, {
-				{id = "graphinfo_text_ranks", filter = 1, dst = {
-					merge_all({x = text_x, y = text_y, w = text_w, h = text_h}, text_color)
+				{id = "graphinfo_text_target", filter = 1, dst = {
+					merge_all({x = label_x + label_w / 2, y = text_y - 4, w = target_text_size, h = target_text_size}, text_color)
 				}},
 				{id = "graphinfo_text_mybest", filter = 1, dst = {
 					merge_all({x = text_x, y = text_y + label_h + mergin_y, w = text_w, h = text_h}, text_color)
