@@ -11,7 +11,7 @@ customize
 ![play_customize](/screenshot/play_customize.png?raw=true)
 
 ## Support
-beatoraja 0.8.3 and later versions
+beatoraja 0.8.5 and later versions
 
 ## License
 lua codes: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)  
