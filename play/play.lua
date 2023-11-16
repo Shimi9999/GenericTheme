@@ -2196,12 +2196,12 @@ local function main(keysNumber)
 			{id = "liftcover", src = "src_liftcover", x = 0, y = 0, w = -1, h = -1, disapearLine = geo.lane.y}
 		)
 		table.insert(skin.image,
-			{id = "duration_text_minus", src = "src_number_genshin_monospace_border", x = 45 * 11, y = 70, w = 45, h = 70}
+			{id = "durationgreen_text_minus", src = "src_number_genshin_monospace_border", x = 45 * 11, y = 70, w = 45, h = 70}
 		)
 		append_all(skin.value, {
-			number({id = "duration", src = "src_number_genshin_monospace_border", divx = 10, digit = 4, ref = 313}),
-			number({id = "duration_min", src = "src_number_genshin_monospace_border", divx = 10, digit = 4, ref = 1320}),
-			number({id = "duration_max", src = "src_number_genshin_monospace_border", divx = 10, digit = 4, ref = 1324}),
+			number({id = "durationgreen", src = "src_number_genshin_monospace_border", divx = 10, digit = 4, ref = 313}),
+			number({id = "durationgreen_min", src = "src_number_genshin_monospace_border", divx = 10, digit = 4, ref = 1321}),
+			number({id = "durationgreen_max", src = "src_number_genshin_monospace_border", divx = 10, digit = 4, ref = 1325}),
 			number({id = "num_lanecover", src = "src_number_genshin_monospace_border", divx = 10, digit = 4, ref = 14}),
 			number({id = "num_lift", src = "src_number_genshin_monospace_border", divx = 10, digit = 4, ref = 314}),
 		})
@@ -2210,23 +2210,23 @@ local function main(keysNumber)
 		local num_w = 18 local num_h = 28 local num_margin_y = 8
 		local minmaxrate = 0.8
 
-		-- duration(green number)
-		local function duration_dst(_offset, op_additional, y, min_max_y)
-			local duration_x = geo.lane.x + geo.lane.w * 0.55
-			local duration_center_x = duration_x + num_w * 3 / 2
-			local duration_color = {r = 100, g = 235, b = 100}
+		-- duration green(green number)
+		local function durationgreen_dst(_offset, op_additional, y, min_max_y)
+			local x = geo.lane.x + geo.lane.w * 0.55
+			local center_x = x + num_w * 3 / 2
+			local color = {r = 100, g = 235, b = 100}
 			return {
-				{id = "duration", offset = _offset, op = merge_all({270}, op_additional), filter = 1, dst = {
-					merge_all({x = duration_x, y = y, w = num_w, h = num_h}, duration_color)
+				{id = "durationgreen", offset = _offset, op = merge_all({270}, op_additional), filter = 1, dst = {
+					merge_all({x = x, y = y, w = num_w, h = num_h}, color)
 				}},
-				{id = "duration_min", offset = _offset, op = merge_all({270, 177}, op_additional), filter = 1, dst = {
-					merge_all({x = duration_center_x - num_w * minmaxrate * 3.5, y = min_max_y, w = num_w * minmaxrate, h = num_h * minmaxrate}, duration_color)
+				{id = "durationgreen_min", offset = _offset, op = merge_all({270, 177}, op_additional), filter = 1, dst = {
+					merge_all({x = center_x - num_w * minmaxrate * 3.5, y = min_max_y, w = num_w * minmaxrate, h = num_h * minmaxrate}, color)
 				}},
-				{id = "duration_text_minus", offset = _offset, op = merge_all({270, 177}, op_additional), filter = 1, dst = {
-					merge_all({x = duration_center_x + num_w * minmaxrate * 1, y = min_max_y, w = num_w * minmaxrate, h = num_h * minmaxrate}, duration_color)
+				{id = "durationgreen_text_minus", offset = _offset, op = merge_all({270, 177}, op_additional), filter = 1, dst = {
+					merge_all({x = center_x + num_w * minmaxrate * 1, y = min_max_y, w = num_w * minmaxrate, h = num_h * minmaxrate}, color)
 				}},
-				{id = "duration_max", offset = _offset, op = merge_all({270, 177}, op_additional), filter = 1, dst = {
-					merge_all({x = duration_center_x + num_w * minmaxrate * 1.5, y = min_max_y, w = num_w * minmaxrate, h = num_h * minmaxrate}, duration_color)
+				{id = "durationgreen_max", offset = _offset, op = merge_all({270, 177}, op_additional), filter = 1, dst = {
+					merge_all({x = center_x + num_w * minmaxrate * 1.5, y = min_max_y, w = num_w * minmaxrate, h = num_h * minmaxrate}, color)
 				}}
 			}
 		end
@@ -2247,7 +2247,7 @@ local function main(keysNumber)
 				{x = geo.lane.x + geo.lane.w * 0.25, y = geo.lane.y - num_h - num_margin_y, w = num_w, h = num_h},
 			}},
 		})
-		append_all(skin.destination, duration_dst(3, {272}, geo.lane.y - (num_h + num_margin_y), geo.lane.y - (num_h + num_h * minmaxrate + num_margin_y * 2)))
+		append_all(skin.destination, durationgreen_dst(3, {272}, geo.lane.y - (num_h + num_margin_y), geo.lane.y - (num_h + num_h * minmaxrate + num_margin_y * 2)))
 
 		-- lanecover(sudden)
 		append_all(skin.destination, {
@@ -2258,10 +2258,10 @@ local function main(keysNumber)
 				{x = geo.lane.x + geo.lane.w * 0.25, y = header.h + num_margin_y, w = num_w, h = num_h},
 			}},
 		})
-		append_all(skin.destination, duration_dst(4, {}, header.h + num_margin_y, header.h + num_h + num_margin_y * 2))
+		append_all(skin.destination, durationgreen_dst(4, {}, header.h + num_margin_y, header.h + num_h + num_margin_y * 2))
 
 		-- duration without lanecover
-		append_all(skin.destination, duration_dst(0, {-271}, header.h - (num_h + num_margin_y), header.h - (num_h + num_h * minmaxrate + num_margin_y * 2)))
+		append_all(skin.destination, durationgreen_dst(0, {-271}, header.h - (num_h + num_margin_y), header.h - (num_h + num_h * minmaxrate + num_margin_y * 2)))
 	end
 	-- judge
 	table.insert(skin.destination, {id = "judge"})
