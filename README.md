@@ -11,7 +11,7 @@ customize
 ![play_customize](/screenshot/play_customize.png?raw=true)
 
 ## Support
-beatoraja 0.8.5 and later versions
+beatoraja 0.8.6 and later versions
 
 ## License
 lua codes: GPLv3 (https://www.gnu.org/licenses/gpl-3.0.html)  
@@ -25,8 +25,8 @@ images: CC BY-SA 3.0 (https://creativecommons.org/licenses/by-sa/3.0)
   FONTS PROJECT
 - Squada One (https://fonts.google.com/specimen/Squada+One)  
   Licensed under SIL Open Font License 1.1 (http://scripts.sil.org/OFL)
-- x16y32pxGridGazer (http://www17.plala.or.jp/xxxxxxx/00ff/)  
-  © 2018-2019 hicc 患者長ひっく
+- x16y32pxGridGazer (https://hicchicc.github.io/00ff/)  
+  © 2018-2023 hicc 患者長ひっく
 - Kenney Fonts (https://kenney.nl/assets/kenney-fonts)  
   Licensed under CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/)
 - Newtown (https://fontmeme.com/jfont/newtown-font/)  
